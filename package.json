@@ -1,0 +1,21 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "devDependencies": {
+    "@mdi/js": "^7.2.96",
+    "@nuxt/devtools": "latest",
+    "@nuxtjs/date-fns": "^1.5.0",
+    "@types/node": "^18.16.19",
+    "nuxt": "^3.6.3",
+    "sass": "^1.63.6",
+    "vite-plugin-vuetify": "^1.0.2",
+    "vuetify": "^3.3.8"
+  }
+}
