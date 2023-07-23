@@ -7,8 +7,9 @@ const customLightTheme: ThemeDefinition = {
   dark: false,
   colors: {
     background: '#EFEBE9',
-    font: '#4e4e4e',
+    font: '#4a4a4a',
     main: '#795548',
+    accent: '#d1baaf'
   }
 }
 

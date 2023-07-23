@@ -17,5 +17,9 @@
     "sass": "^1.63.6",
     "vite-plugin-vuetify": "^1.0.2",
     "vuetify": "^3.3.8"
+  },
+  "dependencies": {
+    "@vite-pwa/nuxt": "^0.1.0",
+    "firebase": "^10.1.0"
   }
 }
