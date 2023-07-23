@@ -252,6 +252,7 @@
 <script setup lang="ts">
 import { getAuth, signInAnonymously, signOut, onAuthStateChanged } from "firebase/auth"
 import { getFirestore, collection, query, where, getDocs, orderBy, limit, doc, setDoc, serverTimestamp, DocumentData, updateDoc, getDoc, onSnapshot } from "firebase/firestore"
+import { getMessaging, getToken, onMessage } from "firebase/messaging"
 
 import {
   mdiPencil,
@@ -263,9 +264,12 @@ import {
   mdiPlayCircleOutline
 } from '@mdi/js'
 
+const config = useRuntimeConfig()
 const nuxtApp = useNuxtApp()
 const firebase: any = nuxtApp.$firebase
 const db = getFirestore(firebase)
+const messaging = getMessaging(firebase)
+
 const router = useRouter()
 const route = useRoute()
 
@@ -293,6 +297,25 @@ const audioPlayer = ref()
 let recorder: Ref<any> = ref(null)
 let mimeType: Ref<string> = ref('')
 let chunks: Ref<Array<any>> = ref([])
+
+const requestPermission = () => {
+  Notification.requestPermission().then((permission) => {
+    if (permission === 'granted') {
+      getToken(messaging, { vapidKey: config.public.vapidKey }).then((currentToken) => {
+        if (currentToken) {
+          console.log('currentToken', currentToken)
+        } else {
+          // Show permission request UI
+          console.log('No registration token available. Request permission to generate one.');
+        }
+      }).catch((err) => {
+        console.log('An error occurred while retrieving token. ', err);
+      });
+    } else {
+      console.log('permission', permission)
+    }
+  })
+}
 
 const userOfId = (userId: string) => {
   return users.value.find((u: any) => u.id === userId)
@@ -556,6 +579,12 @@ onMounted(async () => {
     }
 
     goToBottom()
+  })
+
+  requestPermission()
+
+  onMessage(messaging, (payload) => {
+    console.log('Message received. ', payload);
   })
 })
 </script>

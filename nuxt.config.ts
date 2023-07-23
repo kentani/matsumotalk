@@ -46,7 +46,8 @@ export default defineNuxtConfig({
       firebaseStoragebucket: process.env.FIREBASE_STORAGEBUCKET,
       firebaseMessagingSenderID: process.env.FIREBASE_MESSAGING_SENDER_ID,
       firebaseAppID: process.env.FIREBASE_APP_ID,
-      roomId: process.env.ROOM_ID
+      roomId: process.env.ROOM_ID,
+      vapidKey: process.env.VAPID_KEY
     }
   },
   modules: ['@vite-pwa/nuxt'],
