@@ -24,42 +24,93 @@
       <v-container>
         <div style="overflow: auto;">
           <div
-            v-for="(message, i) in chat?.messages || []"
+            v-for="(chat, i) in chats"
             :key="i"
           >
             <v-card
               variant="flat"
               color="background"
-              :class="{ 'text-right': message.userId === user.id }"
+              :class="{ 'text-right': chat.userId === user.id }"
             >
               <v-card-title
                 class="pa-0 pb-1 text-body-1 text-font"
               >
-                <v-avatar
-                  size="45px"
-                  color="main"
+                <div
+                  class="d-flex align-center"
+                  :class="chat.userId === user.id ? 'justify-end' : 'justify-start'"
                 >
-                  <v-img
-                    alt="Avatar"
-                    :src="userOfId(message.userId)?.image"
-                    cover
-                  ></v-img>
-                </v-avatar>
+                  <v-avatar
+                    v-if="!(chat.userId === user.id)"
+                    size="50px"
+                    color="main"
+                    class="mr-3"
+                  >
+                    <v-img
+                      alt="Avatar"
+                      :src="userOfId(chat.userId)?.image"
+                      cover
+                    ></v-img>
+                  </v-avatar>
 
-                <span
-                  class="ml-3"
-                >
-                  {{ userOfId(message.userId)?.name }}
-                </span>
+                  <div>
+                    <div
+                      style="line-height: 24px;"
+                    >
+                      {{ userOfId(chat.userId)?.name }}
+                    </div>
+
+                    <div
+                      class="text-caption"
+                      style="line-height: 20px;"
+                    >
+                      {{ sendAt(chat.sendAt) }}
+                    </div>
+                  </div>
+
+                  <v-avatar
+                    v-if="chat.userId === user.id"
+                    size="50px"
+                    color="main"
+                    class="ml-3"
+                  >
+                    <v-img
+                      alt="Avatar"
+                      :src="userOfId(chat.userId)?.image"
+                      cover
+                    ></v-img>
+                  </v-avatar>
+                </div>
               </v-card-title>
 
               <v-card-text>
                 <div
                   class="bubble text-body-1"
-                  :class="{ 'accent': message.userId === user.id }"
+                  :class="{ 'accent': chat.userId === user.id }"
                 >
-                  {{ message.message }}
+                  {{ chat.message }}
                 </div>
+
+                <!-- <div
+                  class="pa-1"
+                >
+                  <span
+                    class="text-caption text-font"
+                  >
+                    見た人
+                  </span>
+
+                  <v-avatar
+                    size="30px"
+                    color="main"
+                    class="mr-3"
+                  >
+                    <v-img
+                      alt="Avatar"
+                      :src="userOfId(message.userId)?.image"
+                      cover
+                    ></v-img>
+                  </v-avatar>
+                </div> -->
               </v-card-text>
             </v-card>
           </div>
@@ -250,6 +301,8 @@
 </template>
 
 <script setup lang="ts">
+import { format } from 'date-fns'
+
 import { getAuth, signInAnonymously, signOut, onAuthStateChanged } from "firebase/auth"
 import { getFirestore, collection, query, where, getDocs, orderBy, limit, doc, setDoc, serverTimestamp, DocumentData, updateDoc, getDoc, onSnapshot } from "firebase/firestore"
 
@@ -275,7 +328,7 @@ const titleIcon = ref('/icons/512.png')
 const user: any = ref(null)
 const users: any = ref([])
 const room: any = ref(null)
-const chat: any = ref(null)
+const chats: any = ref([])
 const isShow: any = ref(false)
 
 const isEdit = ref(false)
@@ -320,14 +373,15 @@ const onClickCloseEditText = () => {
 }
 
 const onClickSendEditText = async () => {
-  const docRef = doc(db, "chats", chat.value.id)
-  chat.value.messages.push({
-    userId: user.value.id,
-    message: editText.value
-  })
+  const docRef = doc(collection(db, "chats"))
 
-  await updateDoc(docRef, {
-    messages: chat.value.messages,
+  await setDoc(docRef, {
+    id: docRef.id,
+    roomId: room.value.id,
+    userId: user.value.id,
+    message: editText.value,
+    sendAt: serverTimestamp(),
+    createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
 
@@ -521,12 +575,16 @@ const fetchData = async () => {
   }
 
   if(room.value) {
-    const q = query(collection(db, "chats"), where("roomId", "==", room.value.id), limit(1))
+    const q = query(collection(db, "chats"), where("roomId", "==", room.value.id), orderBy("sendAt", "asc"))
 
     onSnapshot(q, (querySnapshot: any) => {
+      let tmpChats: Array<any> = []
+
       querySnapshot.forEach((doc: any) => {
-        chat.value = doc.data()
+        tmpChats.push(doc.data())
       })
+
+      chats.value = tmpChats
     })
 
     const querySnapshot = await getDocs(query(
@@ -538,6 +596,12 @@ const fetchData = async () => {
       users.value.push(doc.data())
     })
   }
+}
+
+const sendAt = (timestamp: any) => {
+  if(!timestamp) return ''
+
+  return format(timestamp.toDate(), 'MM/dd hh:mm')
 }
 
 onMounted(async () => {
